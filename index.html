@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ZenithHabit • Daily Habit Tracker & Streak App</title>
+  <meta name="description" content="Focused Daily Habit Tracker with top round progress chart, dedicated streak badge, collapsible today's pending tasks, and dedicated profile settings.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            heading: ['Outfit', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            body: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              rose: '#F43F5E',
+              violet: '#8B5CF6',
+              amber: '#F59E0B',
+              emerald: '#10B981',
+              cyan: '#06B6D4',
+              indigo: '#6366F1'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-[#070A11] text-slate-100 font-body min-h-screen antialiased flex flex-col items-center justify-start py-0 sm:py-6 selection:bg-purple-500 selection:text-white">
+
+  <!-- Mobile Device Shell Frame -->
+  <div class="mobile-device-shell w-full max-w-[440px] min-h-screen sm:min-h-[920px] sm:max-h-[940px] bg-[#0B0F19] sm:rounded-[48px] sm:border-[8px] sm:border-slate-800 sm:shadow-[0_25px_70px_rgba(0,0,0,0.85)] flex flex-col relative overflow-hidden transition-all duration-300">
+    
+    <!-- Native Status Bar -->
+    <div class="mobile-status-bar px-6 pt-3.5 pb-2 flex items-center justify-between text-xs font-semibold text-slate-300 z-40 select-none bg-[#0B0F19]/90 backdrop-blur-md sticky top-0">
+      <span id="statusBarClock" class="font-bold tracking-tight">9:41</span>
+      
+      <!-- Dynamic Island Mockup -->
+      <div class="px-3 py-1 rounded-full bg-black/90 border border-slate-800 text-[10px] text-slate-400 flex items-center gap-1.5 shadow-inner">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span id="islandStreakPill">Day 5 Streak 🔥</span>
+      </div>
+
+      <div class="flex items-center gap-1.5 text-[11px] text-slate-400">
+        <span>5G</span>
+        <span class="font-mono text-[10px]">98%</span>
+      </div>
+    </div>
+
+    <!-- Top Navigation Header -->
+    <header class="px-5 pt-2 pb-3 flex items-center justify-between gap-3 border-b border-slate-800/80 bg-[#0B0F19]/95 z-30 sticky top-10">
+      <div class="flex items-center gap-3">
+        <!-- Profile Icon Trigger (Opens Dedicated Profile Screen) -->
+        <button id="openProfileHeaderBtn" class="relative group cursor-pointer" title="Open Profile & Settings">
+          <img id="headerAvatarImg" src="https://api.dicebear.com/7.x/bottts/svg?seed=Nitin" alt="Profile" 
+               class="w-11 h-11 rounded-2xl object-cover border-2 border-purple-500 shadow-md group-hover:scale-105 active:scale-95 transition">
+          <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-[#0B0F19]"></span>
+        </button>
+
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-xs text-slate-400">Hello,</span>
+            <h1 class="font-heading font-black text-base text-white tracking-tight" id="headerGreetingName">Nitin</h1>
+            <span class="text-xs">👋</span>
+          </div>
+          <span class="text-[10px] text-purple-300 font-semibold block" id="headerSubGoal">Health & Fitness</span>
+        </div>
+      </div>
+
+      <!-- 4. DEDICATED STREAK COUNTER PLACEMENT (High-Visibility Fixed Badge) -->
+      <div class="flex items-center gap-2">
+        <div id="dedicatedStreakBadge" class="dedicated-streak-badge px-3 py-1.5 rounded-2xl bg-gradient-to-r from-purple-950/80 via-slate-900 to-rose-950/80 border border-purple-500/50 shadow-lg shadow-purple-500/20 flex items-center gap-2 cursor-pointer active:scale-95 transition" title="Streak Status & 1-Chance Freeze Shield">
+          <span class="text-base animate-bounce">🔥</span>
+          <div class="text-left leading-none">
+            <span class="font-heading font-black text-xs text-white block" id="badgeStreakCount">Day 5</span>
+            <span class="text-[9px] text-amber-300 font-bold block" id="badgeFreezeSnippet">❄️ Shield On</span>
+          </div>
+        </div>
+
+        <!-- Notification Bell -->
+        <button id="headerReminderBtn" class="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-sm text-slate-300 active:bg-slate-800 transition" title="Reminders">
+          🔔
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Mobile Scroll Area -->
+    <div class="mobile-viewport-content flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-24 px-4 pt-3 space-y-4" id="mainAppScrollArea">
+      
+      <!-- ==================================================== -->
+      <!-- TAB VIEW 1: HOME PAGE (Ultra-Focused on Today's Tasks)-->
+      <!-- ==================================================== -->
+      <div id="viewHomePage" class="space-y-4">
+        
+        <!-- -------------------------------------------------- -->
+        <!-- 3. TOP-PLACED PROGRESS ROUND CHART (UPPERMOST PART)-->
+        <!-- -------------------------------------------------- -->
+        <section class="top-round-chart-card bg-gradient-to-br from-[#121829] via-slate-900 to-[#1A182F] border border-purple-500/30 rounded-3xl p-5 shadow-xl relative overflow-hidden">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">🎯</span>
+              <h2 class="font-heading font-extrabold text-sm text-white">Today's Progress Overview</h2>
+            </div>
+            <span id="roundChartTopBadge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              70% Completed
+            </span>
+          </div>
+
+          <!-- Circular Round Progress Ring -->
+          <div class="flex items-center justify-between gap-4 py-1">
+            
+            <!-- SVG / Canvas Interactive Circular Gauge -->
+            <div class="relative w-36 h-36 flex items-center justify-center shrink-0">
+              <canvas id="topRoundProgressCanvas" width="144" height="144" class="w-36 h-36"></canvas>
+              <div class="absolute text-center pointer-events-none">
+                <span class="font-heading font-black text-2xl text-white block leading-none" id="roundCenterPct">70%</span>
+                <span class="text-[10px] text-slate-400 font-semibold block mt-1">Done Today</span>
+              </div>
+            </div>
+
+            <!-- Side Stats Breakdown -->
+            <div class="flex-1 space-y-2.5">
+              <div class="p-2.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-slate-400 font-medium">Completed:</span>
+                  <strong class="text-emerald-400 font-bold" id="statCompletedCount">7 Tasks</strong>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-slate-400 font-medium">Pending Left:</span>
+                  <strong class="text-rose-400 font-bold" id="statLeftCount">3 Tasks</strong>
+                </div>
+              </div>
+
+              <!-- Streak Status Banner in Card -->
+              <div class="flex items-center justify-between text-[11px] p-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                <span class="text-purple-300 font-semibold">🔥 Current Streak:</span>
+                <strong class="text-white font-extrabold" id="roundCardStreakText">Day 5</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- -------------------------------------------------- -->
+        <!-- 2. COLLAPSIBLE 'TODAY'S TASKS' SECTION (FOCUSED)    -->
+        <!-- 1. CLEAN LIST-VIEW HABIT LAYOUT (DIRECT CHECKBOXES)-->
+        <!-- 6. FOCUSED HOME PAGE CONTENT (ONLY TODAY'S TASKS)  -->
+        <!-- -------------------------------------------------- -->
+        <section class="bg-[#121829] border border-slate-800 rounded-3xl p-4.5 shadow-md space-y-3.5" id="todayTasksSection">
+          
+          <!-- Collapsible Header with Toggle Button -->
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="text-base">⚡</span>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h2 class="font-heading font-extrabold text-base text-white truncate">Today's Tasks</h2>
+                  <span id="pendingBadgePill" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">
+                    3 Pending
+                  </span>
+                </div>
+                <p class="text-[11px] text-slate-400">Direct checkboxes for quick completion</p>
+              </div>
+            </div>
+
+            <!-- Right Controls: Add Task & Minimize/Collapse Button -->
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button id="openInlineAddBtn" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-500 to-purple-600 active:opacity-90 text-[11px] font-bold text-white shadow-sm flex items-center gap-1">
+                <span>+ Task</span>
+              </button>
+
+              <!-- Collapse / Expand Toggle Button -->
+              <button id="toggleCollapseTasksBtn" class="px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700 active:bg-slate-800 text-[11px] font-bold text-slate-300 flex items-center gap-1 transition">
+                <span id="collapseIcon">▲</span>
+                <span id="collapseLabel">Collapse</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Add Task Inline Input Row -->
+          <div id="inlineAddRow" class="hidden p-3 rounded-2xl bg-slate-900 border border-purple-500/40 space-y-2 animate-fadeIn">
+            <input type="text" id="inputNewTaskTitle" placeholder="New habit name (e.g. 20m Yoga, Drink 3L)" 
+                   class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white outline-none focus:border-purple-500">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-1 text-[11px]">
+                <span class="text-slate-400">Target:</span>
+                <input type="number" id="inputNewTaskGoal" min="1" max="31" value="26" class="w-12 px-1.5 py-1 rounded bg-slate-800 border border-slate-700 text-center text-white">
+                <span class="text-slate-400">days/mo</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button type="button" id="cancelInlineAddBtn" class="text-xs text-slate-400">Cancel</button>
+                <button type="button" id="saveInlineAddBtn" class="px-3 py-1 bg-purple-600 text-white font-bold text-xs rounded-lg shadow-sm">Save</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Collapsible Content Wrapper -->
+          <div id="collapsibleTasksContent" class="space-y-3 transition-all duration-300">
+            
+            <!-- Filter Bar: "All Today" vs "Pending Only" -->
+            <div class="flex items-center justify-between text-[11px] px-1 text-slate-400">
+              <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                <button class="task-filter-pill active" data-filter="all">All (<span id="countFilterAll">10</span>)</button>
+                <button class="task-filter-pill" data-filter="pending">Pending (<span id="countFilterPending">3</span>)</button>
+              </div>
+              <button id="quickCheckAllToday" class="text-purple-300 hover:text-purple-200 font-semibold">Check All ✓</button>
+            </div>
+
+            <!-- 1. CLEAN LIST-VIEW HABIT LAYOUT -->
+            <!-- Direct check-box next to each habit name -->
+            <div class="space-y-2" id="cleanListViewHabitsContainer">
+              <!-- Dynamically populated clean list-view rows -->
+            </div>
+
+            <!-- Nightly Submit Button -->
+            <div class="pt-2">
+              <button id="homeSubmitDailyBtn" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 active:scale-[0.98] text-white font-heading font-extrabold text-sm shadow-xl shadow-emerald-500/25 flex items-center justify-center gap-2 transition">
+                <span>🚀</span>
+                <span id="homeSubmitBtnText">Submit Daily Progress</span>
+              </button>
+              <p class="text-[10px] text-center text-slate-400 mt-1.5">Submit at night to lock in today's entry and advance your streak.</p>
+            </div>
+
+          </div>
+
+          <!-- Collapsed Placeholder Pill (Shown when minimized) -->
+          <div id="collapsedSummaryPill" class="hidden p-3 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs text-slate-300 flex items-center justify-between cursor-pointer active:bg-slate-800">
+            <span class="flex items-center gap-2">
+              <span>⚡</span>
+              <span id="collapsedSnippetText">7 of 10 tasks completed today</span>
+            </span>
+            <span class="text-purple-300 font-bold text-[11px]">Tap to Expand ▼</span>
+          </div>
+
+        </section>
+
+      </div>
+
+
+      <!-- ==================================================== -->
+      <!-- TAB VIEW 2: HISTORICAL DAILY MARKSHEET               -->
+      <!-- ==================================================== -->
+      <div id="viewMarksheetPage" class="hidden space-y-4">
+        <section class="bg-[#121829] border border-slate-800 rounded-3xl p-4.5 shadow-md space-y-3">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <h2 class="font-heading font-extrabold text-base text-white">Daily Habit Marksheet</h2>
+              <p class="text-[11px] text-slate-400" id="marksheetMonthLabel">Historical Matrix — October 2026</p>
+            </div>
+
+            <button id="marksheetToggleEditBtn" class="px-2.5 py-1.5 rounded-xl bg-slate-900 border border-amber-500/40 text-amber-300 text-[10px] font-bold flex items-center gap-1.5">
+              <span id="marksheetEditIcon">🔒</span>
+              <span id="marksheetEditText">Read-Only</span>
+            </button>
+          </div>
+
+          <!-- Horizontal Scrollable Marksheet -->
+          <div class="mobile-marksheet-scroller rounded-2xl border border-slate-800/80 overflow-x-auto custom-scrollbar">
+            <table class="marksheet-mobile-table w-full border-collapse text-[11px]" id="marksheetTable">
+              <thead id="marksheetTableHead"></thead>
+              <tbody id="marksheetTableBody"></tbody>
+              <tfoot id="marksheetTableFoot"></tfoot>
+            </table>
+          </div>
+          <p class="text-[10px] text-slate-500 text-center">Read-only by default to prevent cheating. Swipe horizontally to view all 31 days.</p>
+        </section>
+      </div>
+
+
+      <!-- ==================================================== -->
+      <!-- TAB VIEW 3: ANALYTICS & TOP 10 HABITS                -->
+      <!-- ==================================================== -->
+      <div id="viewAnalyticsPage" class="hidden space-y-4">
+        
+        <!-- Weekly Progress Breakdown -->
+        <section class="space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="font-heading font-extrabold text-base text-white">Weekly Summary Progress</h2>
+            <span class="text-[11px] text-purple-300 font-semibold">Weeks 1 to 5</span>
+          </div>
+
+          <div class="flex gap-2.5 overflow-x-auto pb-2 custom-scrollbar snap-x" id="analyticsWeeklyCardsRow">
+            <!-- Weekly snap cards -->
+          </div>
+        </section>
+
+        <!-- Charts (Donut, Weekly Bars, 31-Day Trend) -->
+        <section class="bg-[#121829] border border-slate-800 rounded-3xl p-4.5 shadow-md space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <div class="flex items-center gap-1.5" id="analyticsChartTabs">
+              <button class="mobile-chart-tab active" data-chart="weekly">Weekly Bars</button>
+              <button class="mobile-chart-tab" data-chart="trend">31-Day Trend</button>
+            </div>
+            <span class="text-[10px] font-bold text-purple-300 px-2 py-0.5 rounded-full bg-purple-500/20">Progress</span>
+          </div>
+
+          <div id="paneWeeklyBar">
+            <canvas id="analyticsWeeklyCanvas" width="360" height="180" class="w-full"></canvas>
+            <div class="flex justify-center gap-4 text-[11px] text-slate-400 mt-2">
+              <div><span class="w-2 h-2 rounded-sm bg-emerald-500 inline-block"></span> Completed</div>
+              <div><span class="w-2 h-2 rounded-sm bg-amber-500 inline-block"></span> Target Goal</div>
+            </div>
+          </div>
+
+          <div id="paneTrendCurve" class="hidden">
+            <canvas id="analyticsTrendCanvas" width="360" height="180" class="w-full"></canvas>
+            <p class="text-[10px] text-center text-slate-400 mt-1" id="analyticsTrendAvg">Average Consistency: 74%</p>
+          </div>
+        </section>
+
+        <!-- Top 10 Habits Leaderboard -->
+        <section class="bg-[#121829] border border-slate-800 rounded-3xl p-4.5 shadow-md space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-base">🏆</span>
+              <h2 class="font-heading font-extrabold text-base text-white">Top 10 Habits</h2>
+            </div>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              Ranked Leaderboard
+            </span>
+          </div>
+          <div class="space-y-2" id="analyticsTop10List"></div>
+        </section>
+
+      </div>
+
+    </div>
+
+
+    <!-- ==================================================== -->
+    <!-- NATIVE MOBILE BOTTOM NAVIGATION BAR                  -->
+    <!-- ==================================================== -->
+    <nav class="mobile-bottom-nav absolute bottom-0 left-0 right-0 h-18 bg-[#0B0F19]/95 backdrop-blur-lg border-t border-slate-800/80 flex items-center justify-around px-2 z-40">
+      <button class="mobile-nav-item active" data-nav="home">
+        <span class="nav-icon">⚡</span>
+        <span class="nav-label">Today</span>
+      </button>
+
+      <button class="mobile-nav-item" data-nav="marksheet">
+        <span class="nav-icon">📅</span>
+        <span class="nav-label">Matrix</span>
+      </button>
+
+      <!-- Center Floating Action Button (Quick Check) -->
+      <button id="mobileCenterFabBtn" class="mobile-fab-center -mt-6 w-12 h-12 rounded-full bg-gradient-to-tr from-rose-500 via-purple-600 to-indigo-600 shadow-lg shadow-purple-600/40 flex items-center justify-center text-white text-xl active:scale-95 transition">
+        ✓
+      </button>
+
+      <button class="mobile-nav-item" data-nav="analytics">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Analytics</span>
+      </button>
+
+      <button class="mobile-nav-item" data-nav="profile">
+        <span class="nav-icon">👤</span>
+        <span class="nav-label">Profile</span>
+      </button>
+    </nav>
+
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- 5. DEDICATED PROFILE SCREEN / MODAL (WITH DARK/LIGHT)    -->
+  <!-- ======================================================== -->
+  <div id="dedicatedProfileModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md hidden">
+    <div class="bg-[#121829] border border-slate-800 rounded-t-3xl sm:rounded-3xl w-full max-w-[420px] p-6 space-y-5 shadow-2xl animate-slideUp">
+      
+      <!-- Profile Header -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">👤</span>
+          <h3 class="font-heading font-extrabold text-base text-white">Profile & Preferences</h3>
+        </div>
+        <button id="closeProfileModalBtn" class="text-slate-400 hover:text-white text-xl p-1">&times;</button>
+      </div>
+
+      <!-- Avatar Photo & Upload -->
+      <div class="flex flex-col items-center space-y-2.5">
+        <div class="relative group">
+          <img id="modalAvatarImg" src="https://api.dicebear.com/7.x/bottts/svg?seed=Nitin" alt="Avatar" 
+               class="w-20 h-20 rounded-2xl object-cover border-2 border-purple-500 shadow-xl">
+          <input type="file" id="modalAvatarFileInput" accept="image/*" class="hidden">
+        </div>
+        <div class="flex gap-2">
+          <button type="button" id="modalRandomAvatarBtn" class="px-2.5 py-1 bg-slate-800 rounded-xl text-xs text-slate-300 font-semibold active:bg-slate-700">🎲 Randomize</button>
+          <label for="modalAvatarFileInput" class="px-2.5 py-1 bg-purple-600/20 text-purple-300 rounded-xl text-xs font-semibold cursor-pointer active:bg-purple-600/30">Upload Photo</label>
+        </div>
+      </div>
+
+      <!-- 5. CLEAN TOGGLES FOR DARK MODE & LIGHT MODE -->
+      <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+        <label class="text-slate-300 font-bold text-xs flex items-center justify-between">
+          <span>Appearance & Theme</span>
+          <span class="text-[10px] text-purple-400 font-semibold" id="currentThemeLabel">Dark Obsidian</span>
+        </label>
+        
+        <div class="grid grid-cols-2 gap-2" id="themeSwitchGrid">
+          <button type="button" class="theme-choice-card active" data-set-theme="dark">
+            <span class="text-lg block">🌙</span>
+            <strong class="text-xs block text-white">Dark Mode</strong>
+            <span class="text-[10px] text-slate-400 block">Sleek Obsidian</span>
+          </button>
+
+          <button type="button" class="theme-choice-card" data-set-theme="light">
+            <span class="text-lg block">☀️</span>
+            <strong class="text-xs block text-white">Light Mode</strong>
+            <span class="text-[10px] text-slate-400 block">Crisp Porcelain</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- User Information Fields -->
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="text-slate-400 font-bold block mb-1">Display Name</label>
+          <input type="text" id="modalNameInput" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white outline-none focus:border-purple-500">
+        </div>
+        <div>
+          <label class="text-slate-400 font-bold block mb-1">Mobile Phone (Reminders)</label>
+          <input type="tel" id="modalMobileInput" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white outline-none focus:border-purple-500">
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+        <button type="button" id="modalRelaunchSetupBtn" class="text-xs text-slate-400 hover:text-rose-400">Re-run Setup</button>
+        <button type="button" id="modalSaveProfileBtn" class="px-5 py-2 bg-gradient-to-r from-purple-600 to-rose-600 text-white font-bold rounded-xl text-xs shadow-md">
+          Save Settings
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- NOTIFICATIONS / REMINDERS SHEET                          -->
+  <!-- ======================================================== -->
+  <div id="remindersSheet" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm hidden">
+    <div class="bg-[#121829] border border-slate-800 rounded-t-3xl sm:rounded-3xl w-full max-w-[420px] p-5 space-y-4 shadow-2xl animate-slideUp">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">🔔</span>
+          <h3 class="font-heading font-bold text-base text-white">Daily Streak Reminders</h3>
+        </div>
+        <button id="closeRemindersSheetBtn" class="text-slate-400 text-lg">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex justify-between items-center">
+          <div>
+            <span class="text-[10px] text-slate-400 block uppercase font-bold">Target Mobile</span>
+            <span class="font-mono text-white font-bold" id="remindersPhoneDisplay">+91 98765 43210</span>
+          </div>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400">Verified</span>
+        </div>
+
+        <button type="button" id="triggerTestAlertBtn" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-rose-600 text-white font-bold active:opacity-90 shadow-md">
+          🚀 Send Test WhatsApp / Push Reminder
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-20 sm:bottom-6 z-50 transform translate-y-12 opacity-0 pointer-events-none transition-all duration-300 bg-slate-900/95 border border-slate-700 text-white px-4 py-2.5 rounded-2xl text-xs font-bold shadow-2xl flex items-center gap-2 max-w-[340px]"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
